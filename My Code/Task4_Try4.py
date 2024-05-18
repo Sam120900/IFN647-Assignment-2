@@ -17,14 +17,11 @@ def load_queries(query_file_path):
     queries = {}
     with open(query_file_path, 'r', encoding='utf-8') as file:
         content = file.read()
-        raw_queries = re.findall(r'<top>(.*?)</top>', content, re.DOTALL)
+        raw_queries = re.findall(r'<Query>(.*?)</Query>', content, re.DOTALL)
         for raw_query in raw_queries:
             number = re.search(r'<num> Number: (R\d+)', raw_query).group(1)
             title = re.search(r'<title>(.*?)\n', raw_query).group(1).strip()
-            description = re.search(r'<desc> Description:\n(.*?)\n\n', raw_query, re.DOTALL).group(1).strip()
-            narrative = re.search(r'<narr> Narrative:\n(.*?)\n\n', raw_query, re.DOTALL).group(1).strip()
-            combined_query_text = f"{title} {description} {narrative}"
-            queries[number] = process_text(combined_query_text)
+            queries[number] = process_text(title)
     return queries
 
 # Process text by tokenizing, lowercasing, removing stopwords, and stemming
@@ -88,6 +85,8 @@ def calculate_jm_scores(queries, documents, corpus_frequency, corpus_length):
 
 # Save scores to output folder
 def save_scores(scores, output_folder, model_name):
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
     for query_id, doc_scores in scores.items():
         sorted_docs = sorted(doc_scores.items(), key=lambda x: x[1], reverse=True)
         output_file_path = os.path.join(output_folder, f"{model_name}_{query_id}Ranking.dat")
@@ -99,7 +98,7 @@ def save_scores(scores, output_folder, model_name):
 # Main execution flow
 query_file_path = 'C:\\Users\\samin\\Desktop\\IFN647\\Assignment 2\\the50Queries.txt'
 base_data_directory = 'C:\\Users\\samin\\Desktop\\IFN647\\Assignment 2\\Data_Collection-1\\Data_Collection'
-output_folder = 'RankingOutputsTask4_Try3'
+output_folder = 'RankingOutputsTask4_Try4'
 
 queries = load_queries(query_file_path)
 print("Loaded Queries:", queries)  # Debugging statement
@@ -108,9 +107,10 @@ all_bm25_scores = {}
 all_jm_scores = {}
 
 for i in range(101, 151):
+    print(f"Processing Data_C{i}")  # Debugging statement to indicate which collection is being processed
     data_directory = os.path.join(base_data_directory, f"Data_C{i}")
     documents = load_documents(data_directory)
-    print(f"Loaded Documents for Data_C{i}:", documents)  # Debugging statement
+    print(f"Loaded Documents for Data_C{i}: {len(documents)} documents")  # Debugging statement
     N = len(documents)
     avgdl = sum(len(doc) for doc in documents.values()) / N
     df = {}
@@ -119,11 +119,11 @@ for i in range(101, 151):
             df[word] = df.get(word, 0) + 1
 
     bm25_scores = calculate_bm25(N, avgdl, documents, queries, df)
-    print(f"BM25 Scores for Data_C{i}:", bm25_scores)  # Debugging statement
+    print(f"BM25 Scores for Data_C{i}: {bm25_scores}")  # Debugging statement
     corpus_len = sum(len(doc) for doc in documents.values())
     corpus_frequency = Counter(token for tokens in documents.values() for token in tokens)
     jm_scores = calculate_jm_scores(queries, documents, corpus_frequency, corpus_len)
-    print(f"JM_LM Scores for Data_C{i}:", jm_scores)  # Debugging statement
+    print(f"JM_LM Scores for Data_C{i}: {jm_scores}")  # Debugging statement
 
     all_bm25_scores.update(bm25_scores)
     all_jm_scores.update(jm_scores)
