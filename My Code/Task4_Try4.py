@@ -21,7 +21,10 @@ def load_queries(query_file_path):
         for raw_query in raw_queries:
             number = re.search(r'<num> Number: (R\d+)', raw_query).group(1)
             title = re.search(r'<title>(.*?)\n', raw_query).group(1).strip()
-            queries[number] = process_text(title)
+            narrative = re.search(r'<narr>(.*?)\n', raw_query).group(1).strip()
+            description = re.search(r'<desc>(.*?)\n', raw_query).group(1).strip()
+            queries[number] = process_text(title + narrative + description)
+            print(queries)
     return queries
 
 # Process text by tokenizing, lowercasing, removing stopwords, and stemming
