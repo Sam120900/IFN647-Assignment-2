@@ -95,7 +95,7 @@ def calculate_bm25(N, avgdl, documents, queries, df):
                     n = df.get(word, 0)
                     f = doc.count(word)
                     qf = query.count(word)
-                    K = k1 * ((1 - b) + b * (dl / avgdl))
+                    K = k1 * ((1 - b) + b * dl / avgdl)
                     idf = math.log((N - n + 0.5) / (n + 0.5), 10)
                     term_score = idf * ((f * (k1 + 1)) / (f + K)) * ((qf * (k2 + 1)) / (qf + k2))
                     score += term_score
