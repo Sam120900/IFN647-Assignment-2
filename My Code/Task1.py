@@ -55,7 +55,7 @@ def load_queries(query_file_path, stop_words):
             number = re.search(r'<num> Number: (R\d+)', raw_query).group(1)
             title = re.search(r'<title>(.*?)\n', raw_query).group(1).strip()
             description_search = re.search(r'<desc> Description:\s*(.*?)(?=\n<narr>|</Query>)', raw_query, re.DOTALL)
-            narrative_search = re.search(r'<narr> Narrative:\s*(.*?)(?=</Query>)', raw_query, re.DOTALL)
+            narrative_search = re.search(r'<narr> Narrative:\s*(.*?)\n\n', raw_query, re.DOTALL)
 
             description = description_search.group(1).strip() if description_search else ""
             narrative = narrative_search.group(1).strip() if narrative_search else ""
