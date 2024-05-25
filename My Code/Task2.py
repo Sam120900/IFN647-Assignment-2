@@ -247,7 +247,7 @@ def load_queries(query_file_path, stop_words):
             description = description_search.group(1).strip() if description_search else ""
             narrative = narrative_search.group(1).strip() if narrative_search else ""
 
-            full_query = f"{title} {description} {narrative}"
+            full_query = f"{title} {description}"
             queries[number] = process_text(full_query, stop_words)
 
             # Print statements for debugging

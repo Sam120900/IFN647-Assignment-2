@@ -11,12 +11,40 @@ import pandas as pd
 nltk.download('punkt')
 nltk.download('stopwords')
 
-def process_text(text):
+def process_text(text, stop_words):
+    """
+    Returns:
+    list: A list of stemmed tokens.
+    """
     tokens = word_tokenize(text.lower())  # Tokenize the text and convert to lower case.
-    filtered_tokens = [word for word in tokens if word not in stopwords.words('english')]  # Remove stopwords from the tokens.
-    stemmer = PorterStemmer()  # Create an instance of PorterStemmer.
-    stemmed_tokens = [stemmer.stem(token) for token in filtered_tokens]  # Apply stemming to each token.
+    stemmer = PorterStemmer()  # Initialize the PorterStemmer.
+    # Filter out stopwords and stem the remaining words
+    stemmed_tokens = [stemmer.stem(token) for token in tokens if token not in stop_words and token.isalnum()]
+    #print(stemmed_tokens)
+
     return stemmed_tokens
+
+def load_stop_words(file_path):
+    # Start with the default English stop words from NLTK
+    stop_words = set(stopwords.words('english'))
+
+    # Open the file and read stop words from it
+    with open(file_path, 'r', encoding='utf-8') as file:
+        # Since all words are on one line, read the single line
+        line = file.readline()
+        # Split the line into words based on commas and strip whitespace
+        custom_stop_words = line.strip().split(',')
+        # Add each word from the file to the stop words set
+        stop_words.update(word.strip() for word in custom_stop_words)
+    # #had to add this because these are useless to the processing
+
+    custom_stopwords = {'xml', 'newsitem', 'root', 'en', 'titl'}  # Add more as needed
+    stop_words.update(custom_stopwords)
+
+    return stop_words
+
+file_path = 'C:\\Users\\samin\\Desktop\\IFN647\\Assignment 2\\common-english-words.txt'  # Replace with the actual file path
+stop_words = load_stop_words(file_path)
 
 def load_queries(query_file_path):
     queries = {}
@@ -26,7 +54,7 @@ def load_queries(query_file_path):
         for raw_query in raw_queries:
             number = re.search(r'<num> Number: (R\d+)', raw_query).group(1)
             title = re.search(r'<title>(.*?)\n', raw_query).group(1).strip()
-            queries[number] = process_text(title)
+            queries[number] = process_text(title, stop_words)
     return queries
 
 def load_documents(directory_path):
@@ -34,8 +62,9 @@ def load_documents(directory_path):
     for filename in os.listdir(directory_path):
         file_path = os.path.join(directory_path, filename)
         with open(file_path, 'r', encoding='utf8') as file:
-            doc_id = filename.split('.')[0]
-            documents[doc_id] = process_text(file.read())
+            text = file.read().strip()
+            tokens = process_text(text, stop_words)
+            documents[filename] = tokens
     return documents
 
 def calculate_bm25(N, avgdl, documents, queries, df):
@@ -72,7 +101,7 @@ def save_scores(scores, output_folder):
 # Example usage
 query_file_path = 'C:\\Users\\samin\\Desktop\\IFN647\\Assignment 2\\the50Queries.txt'
 base_data_directory = 'C:\\Users\\samin\\Desktop\\IFN647\\Assignment 2\\Data_Collection-1\\Data_Collection'
-output_folder = 'RankingOutputsNEW'
+output_folder = 'Outputs-Task1'
 
 queries = load_queries(query_file_path)
 all_scores = {}
