@@ -78,27 +78,25 @@ def build_corpus_frequency(documents):
 #             scores[query_id][doc_id] = score
 #     return scores
 
-def calculate_jm_scores(queries, documents, corpus_frequency, corpus_length):
+def calculate_jm_scores(queries, documents, document_lengths, corpus_frequency, corpus_length):
     scores = defaultdict(dict)
     for query_id, query in queries.items():
         for doc_id, doc_tokens in documents.items():
-            doc_length = len(doc_tokens)
+            doc_length = document_lengths[doc_id]  # Use the stored document length
             score = 0
             for term in query:
                 doc_term_freq = doc_tokens.count(term)
-                corpus_term_freq = corpus_frequency.get(term, 0)
-                # Calculate the probability of the term in the document
-                p_td = (1 - lambda_param) * (doc_term_freq / doc_length if doc_length > 0 else 0)
-                # Calculate the probability of the term in the corpus
-                p_tc = lambda_param * (corpus_term_freq / corpus_length if corpus_length > 0 else 0)
+                corpus_term_freq = corpus_frequency[term]
+                p_td = lambda_param * (doc_term_freq / doc_length if doc_length > 0 else 0)
+                p_tc = (1 - lambda_param) * (corpus_term_freq / corpus_length if corpus_length > 0 else 0)
                 term_score = p_td + p_tc
-                # Sum the log probabilities for terms in the query; adding a small value to avoid log(0)
                 if term_score > 0:
                     score += math.log(term_score)
                 else:
                     score += math.log(1e-10)  # Avoid taking log of zero
             scores[query_id][doc_id] = score
     return scores
+
 
 
 def load_queries(query_file_path):
