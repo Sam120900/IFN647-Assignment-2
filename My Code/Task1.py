@@ -46,7 +46,7 @@ def load_stop_words(file_path):
 file_path = 'C:\\Users\\samin\\Desktop\\IFN647\\Assignment 2\\common-english-words.txt'  # Replace with the actual file path
 stop_words = load_stop_words(file_path)
 
-def load_queries(query_file_path):
+def load_queries(query_file_path, stop_words):
     queries = {}
     with open(query_file_path, 'r', encoding='utf-8') as file:
         content = file.read()
@@ -54,8 +54,22 @@ def load_queries(query_file_path):
         for raw_query in raw_queries:
             number = re.search(r'<num> Number: (R\d+)', raw_query).group(1)
             title = re.search(r'<title>(.*?)\n', raw_query).group(1).strip()
-            queries[number] = process_text(title, stop_words)
-    return queries
+            description_search = re.search(r'<desc> Description:\s*(.*?)(?=\n<narr>|</Query>)', raw_query, re.DOTALL)
+            narrative_search = re.search(r'<narr> Narrative:\s*(.*?)(?=</Query>)', raw_query, re.DOTALL)
+
+            description = description_search.group(1).strip() if description_search else ""
+            narrative = narrative_search.group(1).strip() if narrative_search else ""
+
+            full_query = f"{title} {description}"
+            queries[number] = process_text(full_query, stop_words)
+
+            # Print statements for debugging
+            print(f"NUMBER: {number}")
+            print(f"TITLE: {title}")
+            print(f"DESCRIPTION: {description}")
+            print(f"NARRATIVE: {narrative}")
+            print(f"FULL QUERY: {full_query}")
+        return queries
 
 def load_documents(directory_path):
     documents = {}

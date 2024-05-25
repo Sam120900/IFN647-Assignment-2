@@ -256,8 +256,8 @@ def load_queries(query_file_path, stop_words):
             print(f"DESCRIPTION: {description}")
             print(f"NARRATIVE: {narrative}")
             print(f"FULL QUERY: {full_query}")
+        return queries
 
-    return queries
 
 def save_scores(scores, output_folder):
     for query_id, doc_scores in scores.items():
