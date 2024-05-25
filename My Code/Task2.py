@@ -98,14 +98,27 @@ def calculate_jm_scores(queries, documents, corpus_frequency, corpus_length):
 
 
 def load_queries(query_file_path):
+    """
+        Load and process queries from a structured text file, including title, description, and narrative.
+
+        Args:
+        query_file_path (str): Path to the query file.
+        stop_words (set): A set of stopwords to remove.
+
+        Returns:
+        dict: A dictionary containing query ids and their processed tokens.
+        """
     queries = {}
     with open(query_file_path, 'r', encoding='utf-8') as file:
         content = file.read()
-        raw_queries = re.findall(r'<Query>(.*?)</Query>', content, re.DOTALL)
-        for raw_query in raw_queries:
-            number = re.search(r'<num> Number: (R\d+)', raw_query).group(1)
-            title = re.search(r'<title>(.*?)\n', raw_query).group(1).strip()
-            queries[number] = process_text(title)
+        query_blocks = re.findall(r'<Query>(.*?)</Query>', content, re.DOTALL)
+        for block in query_blocks:
+            number = re.search(r'<num> Number: (R\d+)', block).group(1)
+            title = re.search(r'<title>(.*?)\n', block).group(1).strip()
+            desc = re.search(r'<desc> Description:(.*?)\n', block, re.DOTALL).group(1).strip()
+            narr = re.search(r'<narr> Narrative:(.*?)\n', block, re.DOTALL).group(1).strip()
+            full_query = f"{title} {desc} {narr}"  # Concatenate title, description, and narrative.
+            queries[number] = process_text(full_query, stop_words)
     return queries
 
 def save_scores(scores, output_folder):
