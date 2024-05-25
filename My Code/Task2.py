@@ -45,14 +45,18 @@ def load_documents(directory_path):
     #save documents in a dictionary
     documents = {}
     corpus_length = 0
+    document_lengths = {}  # Dictionary to store individual document lengths
     for filename in os.listdir(directory_path):
         file_path = os.path.join(directory_path, filename)
         with open(file_path, 'r', encoding='utf8') as file:
             text = file.read().strip()
             tokens = process_text(text)
             documents[filename] = tokens
-            corpus_length += len(tokens)
-    return documents, corpus_length
+            doc_length = len(tokens)  # Length of this particular document
+            document_lengths[filename] = doc_length  # Store individual document length
+            corpus_length += doc_length
+    return documents, document_lengths, corpus_length
+
 
 def build_corpus_frequency(documents):
     return Counter(token for tokens in documents.values() for token in tokens)
@@ -84,9 +88,9 @@ def calculate_jm_scores(queries, documents, corpus_frequency, corpus_length):
                 doc_term_freq = doc_tokens.count(term)
                 corpus_term_freq = corpus_frequency.get(term, 0)
                 # Calculate the probability of the term in the document
-                p_td = lambda_param * (doc_term_freq / doc_length if doc_length > 0 else 0)
+                p_td = (1 - lambda_param) * (doc_term_freq / doc_length if doc_length > 0 else 0)
                 # Calculate the probability of the term in the corpus
-                p_tc = (1 - lambda_param) * (corpus_term_freq / corpus_length if corpus_length > 0 else 0)
+                p_tc = lambda_param * (corpus_term_freq / corpus_length if corpus_length > 0 else 0)
                 term_score = p_td + p_tc
                 # Sum the log probabilities for terms in the query; adding a small value to avoid log(0)
                 if term_score > 0:
