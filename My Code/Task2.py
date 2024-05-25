@@ -30,6 +30,7 @@ def process_text(text):
     return stemmed_tokens
 
 def load_documents(directory_path):
+    #save documents in a dictionary
     documents = {}
     corpus_length = 0
     for filename in os.listdir(directory_path):
@@ -44,6 +45,23 @@ def load_documents(directory_path):
 def build_corpus_frequency(documents):
     return Counter(token for tokens in documents.values() for token in tokens)
 
+# def calculate_jm_scores(queries, documents, corpus_frequency, corpus_length):
+#     scores = defaultdict(dict)
+#     for query_id, query in queries.items():
+#         for doc_id, doc_tokens in documents.items():
+#             doc_length = len(doc_tokens)
+#             score = 0
+#             for term in query:
+#                 doc_term_freq = doc_tokens.count(term)
+#                 corpus_term_freq = corpus_frequency[term]
+#                 p_td = (1 - lambda_param) * (doc_term_freq / doc_length) if doc_length > 0 else 0
+#                 p_tc = lambda_param * (corpus_term_freq / corpus_length) if corpus_length > 0 else 0
+#                 term_score = p_td + p_tc
+#                 if term_score > 0:
+#                     score += math.log(term_score)
+#             scores[query_id][doc_id] = score
+#     return scores
+
 def calculate_jm_scores(queries, documents, corpus_frequency, corpus_length):
     scores = defaultdict(dict)
     for query_id, query in queries.items():
@@ -52,14 +70,20 @@ def calculate_jm_scores(queries, documents, corpus_frequency, corpus_length):
             score = 0
             for term in query:
                 doc_term_freq = doc_tokens.count(term)
-                corpus_term_freq = corpus_frequency[term]
-                p_td = (1 - lambda_param) * (doc_term_freq / doc_length) if doc_length > 0 else 0
-                p_tc = lambda_param * (corpus_term_freq / corpus_length) if corpus_length > 0 else 0
+                corpus_term_freq = corpus_frequency.get(term, 0)
+                # Calculate the probability of the term in the document
+                p_td = lambda_param * (doc_term_freq / doc_length if doc_length > 0 else 0)
+                # Calculate the probability of the term in the corpus
+                p_tc = (1 - lambda_param) * (corpus_term_freq / corpus_length if corpus_length > 0 else 0)
                 term_score = p_td + p_tc
+                # Sum the log probabilities for terms in the query; adding a small value to avoid log(0)
                 if term_score > 0:
                     score += math.log(term_score)
+                else:
+                    score += math.log(1e-10)  # Avoid taking log of zero
             scores[query_id][doc_id] = score
     return scores
+
 
 def load_queries(query_file_path):
     queries = {}
