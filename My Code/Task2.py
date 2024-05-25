@@ -22,11 +22,23 @@ output_path = 'C:/Users/samin/Desktop/IFN647/Assignment 2/My Code/Outputs-Task2/
 if not os.path.exists(output_path):
     os.makedirs(output_path)
 
-def process_text(text):
-    tokens = word_tokenize(text.lower())
-    filtered_tokens = [word for word in tokens if word not in stopwords.words('english')]
-    stemmer = PorterStemmer()
-    stemmed_tokens = [stemmer.stem(token) for token in filtered_tokens]
+# def process_text(text):
+#     tokens = word_tokenize(text.lower())
+#     filtered_tokens = [word for word in tokens if word not in stopwords.words('english')]
+#     stemmer = PorterStemmer()
+#     stemmed_tokens = [stemmer.stem(token) for token in filtered_tokens]
+#     return stemmed_tokens
+
+stop_words = set(stopwords.words('english'))
+def process_text(text, stop_words):
+    """
+    Returns:
+    list: A list of stemmed tokens.
+    """
+    tokens = word_tokenize(text.lower())  # Tokenize the text and convert to lower case.
+    stemmer = PorterStemmer()  # Initialize the PorterStemmer.
+    # Filter out stopwords and stem the remaining words
+    stemmed_tokens = [stemmer.stem(token) for token in tokens if token not in stop_words and token.isalnum()]
     return stemmed_tokens
 
 def load_documents(directory_path):
