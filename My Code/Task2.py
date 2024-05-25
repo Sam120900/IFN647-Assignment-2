@@ -50,7 +50,7 @@ def load_documents(directory_path):
         file_path = os.path.join(directory_path, filename)
         with open(file_path, 'r', encoding='utf8') as file:
             text = file.read().strip()
-            tokens = process_text(text)
+            tokens = process_text(text, stop_words)
             documents[filename] = tokens
             doc_length = len(tokens)  # Length of this particular document
             document_lengths[filename] = doc_length  # Store individual document length
@@ -87,8 +87,8 @@ def calculate_jm_scores(queries, documents, document_lengths, corpus_frequency, 
             for term in query:
                 doc_term_freq = doc_tokens.count(term)
                 corpus_term_freq = corpus_frequency[term]
-                p_td = lambda_param * (doc_term_freq / doc_length if doc_length > 0 else 0)
-                p_tc = (1 - lambda_param) * (corpus_term_freq / corpus_length if corpus_length > 0 else 0)
+                p_td = (1- lambda_param) * (doc_term_freq / doc_length if doc_length > 0 else 0)
+                p_tc = lambda_param * (corpus_term_freq / corpus_length if corpus_length > 0 else 0)
                 term_score = p_td + p_tc
                 if term_score > 0:
                     score += math.log(term_score)
@@ -113,13 +113,14 @@ def load_queries(query_file_path):
     queries = {}
     with open(query_file_path, 'r', encoding='utf-8') as file:
         content = file.read()
-        query_blocks = re.findall(r'<Query>(.*?)</Query>', content, re.DOTALL)
-        for block in query_blocks:
-            number = re.search(r'<num> Number: (R\d+)', block).group(1)
-            title = re.search(r'<title>(.*?)\n', block).group(1).strip()
-            desc = re.search(r'<desc> Description:(.*?)\n', block, re.DOTALL).group(1).strip()
-            narr = re.search(r'<narr> Narrative:(.*?)\n', block, re.DOTALL).group(1).strip()
-            full_query = f"{title} {desc} {narr}"  # Concatenate title, description, and narrative.
+        raw_queries = re.findall(r'<Query>(.*?)</Query>', content, re.DOTALL)
+        for raw_query in raw_queries:
+            number = re.search(r'<num> Number: (R\d+)', raw_query).group(1)
+            title = re.search(r'<title>(.*?)\n', raw_query).group(1).strip()
+            narrative = re.search(r'<narr>(.*?)\n', raw_query).group(1).strip()
+            description = re.search(r'<desc>(.*?)\n', raw_query).group(1).strip()
+            # queries[number] = process_text(title + narrative + description)
+            full_query = f"{title} {description} {narrative}"  # Concatenate title, description, and narrative.
             queries[number] = process_text(full_query, stop_words)
     return queries
 
@@ -137,9 +138,9 @@ all_scores = {}
 
 for i in range(101, 151):  # Assumes the data collections are named as 'Data_C101' to 'Data_C150'
     data_directory = os.path.join(document_path, f"Data_C{i}")
-    documents, corpus_len = load_documents(data_directory)
+    documents, document_lengths, corpus_length = load_documents(data_directory)
     freq = build_corpus_frequency(documents)
-    scores = calculate_jm_scores(queries, documents, freq, corpus_len)
+    scores = calculate_jm_scores(queries, documents, document_lengths, freq, corpus_length)
     all_scores.update(scores)
 
 save_scores(all_scores, output_path)
