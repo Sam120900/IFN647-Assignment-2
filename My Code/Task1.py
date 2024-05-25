@@ -117,7 +117,7 @@ query_file_path = 'C:\\Users\\samin\\Desktop\\IFN647\\Assignment 2\\the50Queries
 base_data_directory = 'C:\\Users\\samin\\Desktop\\IFN647\\Assignment 2\\Data_Collection-1\\Data_Collection'
 output_folder = 'Outputs-Task1'
 
-queries = load_queries(query_file_path)
+queries = load_queries(query_file_path, stop_words)
 all_scores = {}
 
 for i in range(101, 151):
