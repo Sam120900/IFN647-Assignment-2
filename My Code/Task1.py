@@ -38,7 +38,7 @@ def load_stop_words(file_path):
         stop_words.update(word.strip() for word in custom_stop_words)
     # #had to add this because these are useless to the processing
 
-    custom_stopwords = {'xml', 'newsitem', 'root', 'en', 'titl'}  # Add more as needed
+    custom_stopwords = {'xml', 'newsitem', 'root', 'en', 'titl'}
     stop_words.update(custom_stopwords)
 
     return stop_words
@@ -62,8 +62,6 @@ def load_queries(query_file_path, stop_words):
 
             full_query = f"{title} {description} {narrative}"
             queries[number] = process_text(full_query, stop_words)
-
-
         return queries
 
 def load_documents(directory_path):

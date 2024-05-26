@@ -21,19 +21,6 @@ output_path = 'C:/Users/samin/Desktop/IFN647/Assignment 2/My Code/Outputs-Task2/
 if not os.path.exists(output_path):
     os.makedirs(output_path)
 
-# def process_text(text):
-#     tokens = word_tokenize(text.lower())
-#     filtered_tokens = [word for word in tokens if word not in stopwords.words('english')]
-#     stemmer = PorterStemmer()
-#     stemmed_tokens = [stemmer.stem(token) for token in filtered_tokens]
-#     return stemmed_tokens
-
-# stop_words = set(stopwords.words('english'))
-# #had to add this because these are useless to the processing
-# custom_stopwords = {'xml', 'newsitem', 'root', 'en', 'titl'}  # Add more as needed
-# stop_words.update(custom_stopwords)
-#
-
 def load_stop_words(file_path):
     # Start with the default English stop words from NLTK
     stop_words = set(stopwords.words('english'))
@@ -48,7 +35,7 @@ def load_stop_words(file_path):
         stop_words.update(word.strip() for word in custom_stop_words)
     # #had to add this because these are useless to the processing
 
-    custom_stopwords = {'xml', 'newsitem', 'root', 'en', 'titl'}  # Add more as needed
+    custom_stopwords = {'xml', 'newsitem', 'root', 'en', 'titl'}
     stop_words.update(custom_stopwords)
 
     return stop_words
@@ -94,151 +81,39 @@ def load_documents(directory_path):
 def build_corpus_frequency(documents):
     return Counter(token for tokens in documents.values() for token in tokens)
 
-# def calculate_jm_scores(queries, documents, corpus_frequency, corpus_length):
-#     scores = defaultdict(dict)
-#     for query_id, query in queries.items():
-#         for doc_id, doc_tokens in documents.items():
-#             doc_length = len(doc_tokens)
-#             score = 0
-#             for term in query:
-#                 doc_term_freq = doc_tokens.count(term)
-#                 corpus_term_freq = corpus_frequency[term]
-#                 p_td = (1 - lambda_param) * (doc_term_freq / doc_length) if doc_length > 0 else 0
-#                 p_tc = lambda_param * (corpus_term_freq / corpus_length) if corpus_length > 0 else 0
-#                 term_score = p_td + p_tc
-#                 if term_score > 0:
-#                     score += math.log(term_score)
-#             scores[query_id][doc_id] = score
-#     return scores
-
-# def calculate_jm_scores(queries, documents, document_lengths, corpus_frequency, corpus_length):
-#     scores = defaultdict(dict)
-#     for query_id, query in queries.items():
-#         for doc_id, doc_tokens in documents.items():
-#             doc_length = document_lengths[doc_id]  # Use the stored document length
-#             score = 0
-#             for term in query:
-#                 doc_term_freq = doc_tokens.count(term)
-#                 corpus_term_freq = corpus_frequency[term]
-#                 p_td = (1- lambda_param) * (doc_term_freq / doc_length if doc_length > 0 else 0)
-#                 p_tc = lambda_param * (corpus_term_freq / corpus_length if corpus_length > 0 else 0)
-#                 term_score = p_td + p_tc
-#                 if term_score > 0:
-#                     score += math.log(term_score)
-#                 else:
-#                     score += math.log(1e-10)  # Avoid taking log of zero
-#             scores[query_id][doc_id] = score
-#     return scores
 
 def calculate_jm_scores(queries, documents, corpus_frequency, corpus_length):
     lambda_param = 0.4
     scores = defaultdict(dict)
     for query_id, query in queries.items():
+        print("QUERY: ", query_id)
         for doc_id, doc_tokens in documents.items():
+            print("DOC ID: ", doc_id)
             doc_length = len(doc_tokens)
+            print("doc length:", doc_length)
+            #doc_length = document_length
             score = 0
             for term in query:
+                # print("TOKENS: ", doc_tokens)
+                # print("term: ", term)
                 doc_term_freq = doc_tokens.count(term)
+                print("doc term:", doc_term_freq)
                 corpus_term_freq = corpus_frequency[term]
+                print("corpus term:", corpus_term_freq)
                 p_td = (1 - lambda_param) * (doc_term_freq / doc_length) if doc_length > 0 else 0
                 p_tc = lambda_param * (corpus_term_freq / corpus_length) if corpus_length > 0 else 0
                 term_score = p_td + p_tc
-                if term_score > 0:
-                    score += math.log(term_score)
+                #if term_score > 0:
+                score += (term_score)
             scores[query_id][doc_id] = score
+            # print("score:", scores[query_id][doc_id])
     return scores
 
-
-
-# def load_queries(query_file_path):
-#     """
-#         Load and process queries from a structured text file, including title, description, and narrative.
-#
-#         Args:
-#         query_file_path (str): Path to the query file.
-#         stop_words (set): A set of stopwords to remove.
-#
-#         Returns:
-#         dict: A dictionary containing query ids and their processed tokens.
-#         """
-#     queries = {}
-#     with open(query_file_path, 'r', encoding='utf-8') as file:
-#         content = file.read()
-#         raw_queries = re.findall(r'<Query>(.*?)</Query>', content, re.DOTALL)
-#         for raw_query in raw_queries:
-#             number = re.search(r'<num> Number: (R\d+)', raw_query).group(1)
-#             title = re.search(r'<title>(.*?)\n', raw_query).group(1).strip()
-#             narrative = re.search(r'<narr>(.*?)\n', raw_query).group(1).strip()
-#             description = re.search(r'<desc>(.*?)\n', raw_query).group(1).strip()
-#             # queries[number] = process_text(title + narrative + description)
-#             full_query = f"{title} {description} {narrative}"  # Concatenate title, description, and narrative.
-#             print(full_query)
-#             queries[number] = process_text(full_query, stop_words)
-#     return queries
-
-# def load_queries(query_file_path):
-#     """
-#     Load and process queries from a structured text file, including title, description, and narrative.
-#
-#     Args:
-#     query_file_path (str): Path to the query file.
-#     stop_words (set): A set of stopwords to remove.
-#
-#     Returns:
-#     dict: A dictionary containing query ids and their processed tokens.
-#     """
-#     queries = {}
-#     with open(query_file_path, 'r', encoding='utf-8') as file:
-#         content = file.read()
-#         # Updated regex to capture multiline text until the next '<Query>' or end of the content
-#         raw_queries = re.findall(r'<Query>(.*?)</Query>', content, re.DOTALL)
-#         for raw_query in raw_queries:
-#             number = re.search(r'<num> Number: (R\d+)', raw_query).group(1)
-#             title = re.search(r'<title>(.*?)\n', raw_query).group(1).strip()
-#             print("TITLE", title)
-#             description = re.search(r'<desc>(.*?)\n', raw_query).group(1).strip()
-#             print("DESC", description)
-#             narrative = re.search(r'<narr>(.*?)\n', raw_query).group(1).strip()
-#             print("NARR", narrative)
-#             full_query = f"{title} {description} {narrative}"  # Concatenate title, description, and narrative.
-#             stop_words = load_stop_words("C:\\Users\\samin\\Desktop\\IFN647\\Assignment 2\\common-english-words.txt")
-#             queries[number] = process_text(full_query, stop_words)
-#             print(full_query)
-#     return queries
-
 def load_queries(query_file_path, stop_words):
-    # queries = {}
-    # with open(query_file_path, 'r', encoding='utf-8') as file:
-    #     content = file.read()
-    #     raw_queries = re.findall(r'<Query>(.*?)</Query>', content, re.DOTALL)
-    #     for raw_query in raw_queries:
-    #         number = re.search(r'<num> Number: (R\d+)', raw_query).group(1)
-    #         title = re.search(r'<title>(.*?)\n', raw_query).group(1).strip()
-    #         print("TITLE: ", title)
-    #         description = re.search(r'<desc> Description:\s*(.*?)(?=\n<narr>|</Query>)', raw_query, re.DOTALL)
-    #         narrative = re.search(r'<narr> Narrative:\s*(.*?)(?=\n</Query>)', raw_query, re.DOTALL)
-    #
-    #         # Check if description and narrative are found, and handle the case where they might not be present
-    #         if description:
-    #             description = description.group(1).strip()
-    #         else:
-    #             description = ""
-    #         print("DESC: ", description)
-    #
-    #         if narrative:
-    #             narrative = narrative.group(1).strip()
-    #         else:
-    #             narrative = ""
-    #         print("NARR: ", narrative)
-    #
-    #         full_query = f"{title} {description} {narrative}"  # Concatenate title, description, and narrative.
-    #         print("full query: ", full_query)
-    #         queries[number] = process_text(full_query, stop_words)
     queries = {}
     with open(query_file_path, 'r', encoding='utf-8') as file:
         content = file.read()
         raw_queries = re.findall(r'<Query>(.*?)</Query>', content, re.DOTALL)
-        #print(raw_queries)
         for raw_query in raw_queries:
             number = re.search(r'<num> Number: (R\d+)', raw_query).group(1)
             title = re.search(r'<title>(.*?)\n', raw_query).group(1).strip()
@@ -252,13 +127,6 @@ def load_queries(query_file_path, stop_words):
 
             full_query = f"{title} {description} {narrative}"
             queries[number] = process_text(full_query, stop_words)
-
-            # Print statements for debugging
-            print(f"NUMBER: {number}")
-            print(f"TITLE: {title}")
-            print(f"DESCRIPTION: {description}")
-            print(f"NARRATIVE: {narrative}")
-            print(f"FULL QUERY: {full_query}")
         return queries
 
 
