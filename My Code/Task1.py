@@ -60,15 +60,10 @@ def load_queries(query_file_path, stop_words):
             description = description_search.group(1).strip() if description_search else ""
             narrative = narrative_search.group(1).strip() if narrative_search else ""
 
-            full_query = f"{title} {description}"
+            full_query = f"{title} {description} {narrative}"
             queries[number] = process_text(full_query, stop_words)
 
-            # Print statements for debugging
-            print(f"NUMBER: {number}")
-            print(f"TITLE: {title}")
-            print(f"DESCRIPTION: {description}")
-            print(f"NARRATIVE: {narrative}")
-            print(f"FULL QUERY: {full_query}")
+
         return queries
 
 def load_documents(directory_path):
