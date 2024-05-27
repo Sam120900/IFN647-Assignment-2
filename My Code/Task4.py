@@ -21,12 +21,22 @@ if not os.path.exists(output_folder):
 
 # Load and process stopwords
 def load_stop_words(file_path):
+    # Start with the default English stop words from NLTK
     stop_words = set(stopwords.words('english'))
+
+    # Open the file and read stop words from it
     with open(file_path, 'r', encoding='utf-8') as file:
-        custom_stop_words = file.readline().strip().split(',')
+        # Since all words are on one line, read the single line
+        line = file.readline()
+        # Split the line into words based on commas and strip whitespace
+        custom_stop_words = line.strip().split(',')
+        # Add each word from the file to the stop words set
         stop_words.update(word.strip() for word in custom_stop_words)
+    # #had to add this because these are useless to the processing
+
     custom_stopwords = {'xml', 'newsitem', 'root', 'en', 'titl'}
     stop_words.update(custom_stopwords)
+
     return stop_words
 
 stop_words_file_path = 'C:\\Users\\samin\\Desktop\\IFN647\\Assignment 2\\common-english-words.txt'
@@ -73,6 +83,15 @@ def load_queries(query_file_path, stop_words):
             queries[number] = process_text(full_query, stop_words)
     return queries
 
+def load_documents_bm25(directory_path):
+    documents = {}
+    for filename in os.listdir(directory_path):
+        file_path = os.path.join(directory_path, filename)
+        with open(file_path, 'r', encoding='utf8') as file:
+            text = file.read().strip()
+            tokens = process_text(text, stop_words)
+            documents[filename] = tokens
+    return documents
 # Calculation functions for BM25 and Jelinek-Mercer
 def calculate_bm25(N, avgdl, documents, queries, df):
     k1 = 1.2
@@ -130,10 +149,23 @@ for i in range(101, 151):
     documents, document_lengths, corpus_length = load_documents(data_directory)
     freq = build_corpus_frequency(documents)
 
+    #variables needed for bm25-
+    documents_bm25 = load_documents_bm25(data_directory)
+    N = len(documents_bm25)
+    avgdl = sum(len(doc) for doc in documents.values()) / N
+    df = {}
+
+
     # BM25
-    df = {word: sum(1 for d in documents if word in d) for word in freq}
-    scores_bm25 = calculate_bm25(len(documents), sum(document_lengths.values()) / len(document_lengths), documents, queries, df)
-    all_scores_bm25.update(scores_bm25)
+    # df = {word: sum(1 for d in documents if word in d) for word in freq}
+    # scores_bm25 = calculate_bm25(len(documents), sum(document_lengths.values()) / len(document_lengths), documents, queries, df)
+    # all_scores_bm25.update(scores_bm25)
+
+    for doc in documents.values():
+        for word in set(doc):
+            df[word] = df.get(word, 0) + 1
+    scores = calculate_bm25(N, avgdl, documents_bm25, queries, df)
+    all_scores_bm25.update(scores)
 
     # JM
     scores_jm = calculate_jm_scores(queries, documents, freq, corpus_length)
