@@ -14,7 +14,7 @@ nltk.download('stopwords')
 # Paths
 base_data_directory = 'C:/Users/samin/Desktop/IFN647/Assignment 2/Data_Collection-1/Data_Collection'
 query_file_path = 'C:/Users/samin/Desktop/IFN647/Assignment 2/the50Queries.txt'
-output_folder = 'C:/Users/samin/Desktop/IFN647/Assignment 2/RankingOutputs'
+output_folder = 'C:/Users/samin/Desktop/IFN647/Assignment 2/My Code/RankingOutputs'
 
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
