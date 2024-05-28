@@ -72,6 +72,7 @@ def load_documents(directory_path):
             text = file.read().strip()
             tokens = process_text(text, stop_words)
             documents[filename] = tokens
+            #print(filename)
     return documents
 
 def calculate_bm25(N, avgdl, documents, queries, df):
@@ -108,22 +109,25 @@ def save_scores(scores, output_folder):
 # Example usage
 query_file_path = 'C:\\Users\\samin\\Desktop\\IFN647\\Assignment 2\\the50Queries.txt'
 base_data_directory = 'C:\\Users\\samin\\Desktop\\IFN647\\Assignment 2\\Data_Collection-1\\Data_Collection'
-output_folder = 'Outputs-Task1'
+output_folder = 'Outputs-Task1-New'
 
 queries = load_queries(query_file_path, stop_words)
 all_scores = {}
 
 for i in range(101, 151):
     data_directory = os.path.join(base_data_directory, f"Data_C{i}")
+    print(data_directory)
     documents = load_documents(data_directory)
     N = len(documents)
+    #print(N)
     avgdl = sum(len(doc) for doc in documents.values()) / N
     df = {}
     for doc in documents.values():
         for word in set(doc):
             df[word] = df.get(word, 0) + 1
     scores = calculate_bm25(N, avgdl, documents, queries, df)
+    print(scores)
     all_scores.update(scores)
-
+    print(all_scores)
 save_scores(all_scores, output_folder)
 
