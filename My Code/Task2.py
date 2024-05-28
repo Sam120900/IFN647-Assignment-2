@@ -6,20 +6,33 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import PorterStemmer
 from collections import defaultdict, Counter
-
 # Ensure necessary NLTK resources are downloaded
 nltk.download('punkt')
 nltk.download('stopwords')
 
+def process_text(text, stop_words):
+    """
+    Returns:
+    list: A list of stemmed tokens.
+    """
+    tokens = word_tokenize(text.lower())  # Tokenize the text and convert to lower case.
+    stemmer = PorterStemmer()  # Initialize the PorterStemmer.
+    # Filter out stopwords and stem the remaining words
+    stemmed_tokens = [stemmer.stem(token) for token in tokens if token not in stop_words and token.isalnum()]
+    #print(stemmed_tokens)
 
+    return stemmed_tokens
 
 # Paths
 document_path = 'C:/Users/samin/Desktop/IFN647/Assignment 2/Data_Collection-1/Data_Collection/'
 query_file_path = 'C:/Users/samin/Desktop/IFN647/Assignment 2/the50Queries.txt'
 output_path = 'C:/Users/samin/Desktop/IFN647/Assignment 2/My Code/Outputs-Task2/'
 
+
+
 if not os.path.exists(output_path):
     os.makedirs(output_path)
+
 
 def load_stop_words(file_path):
     # Start with the default English stop words from NLTK
@@ -45,18 +58,6 @@ file_path = 'C:\\Users\\samin\\Desktop\\IFN647\\Assignment 2\\common-english-wor
 stop_words = load_stop_words(file_path)
 
 
-def process_text(text, stop_words):
-    """
-    Returns:
-    list: A list of stemmed tokens.
-    """
-    tokens = word_tokenize(text.lower())  # Tokenize the text and convert to lower case.
-    stemmer = PorterStemmer()  # Initialize the PorterStemmer.
-    # Filter out stopwords and stem the remaining words
-    stemmed_tokens = [stemmer.stem(token) for token in tokens if token not in stop_words and token.isalnum()]
-    #print(stemmed_tokens)
-
-    return stemmed_tokens
 
 def load_documents(directory_path):
     #save documents in a dictionary
@@ -106,7 +107,7 @@ def calculate_jm_scores(queries, documents, corpus_frequency, corpus_length):
                 #if term_score > 0:
                 score += (term_score)
             scores[query_id][doc_id] = score
-            # print("score:", scores[query_id][doc_id])
+            # print("scorea:", scores[query_id][doc_id])
     return scores
 
 def load_queries(query_file_path, stop_words):
