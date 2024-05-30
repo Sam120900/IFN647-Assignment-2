@@ -18,7 +18,10 @@ def process_text(text, stop_words):
     """
     tokens = word_tokenize(text.lower())
     stemmer = PorterStemmer()
+    #print([stemmer.stem(token) for token in tokens if token not in stop_words and token.isalnum()])
     return [stemmer.stem(token) for token in tokens if token not in stop_words and token.isalnum()]
+
+    #return a list of tokens
 
 def load_stop_words(file_path):
     """
@@ -29,7 +32,8 @@ def load_stop_words(file_path):
         custom_stop_words = file.readline().strip().split(',')
     stop_words.update(word.strip() for word in custom_stop_words)
     stop_words.update({'xml', 'newsitem', 'root', 'en', 'titl'})
-    return stop_words
+    #print(stop_words)
+    return stop_words #returns a set
 
 def load_queries(query_file_path, stop_words):
     """
@@ -50,7 +54,9 @@ def load_queries(query_file_path, stop_words):
 
             full_query = f"{title} {description} {narrative}"
             queries[number] = process_text(full_query, stop_words)
+            #print(queries)
     return queries
+    #returns a dictionary where the key-value pair is the query ID and the query terms
 
 def load_documents_bm25(directory_path, stop_words):
     """
@@ -62,6 +68,7 @@ def load_documents_bm25(directory_path, stop_words):
         with open(file_path, 'r', encoding='utf8') as file:
             documents[filename] = process_text(file.read().strip(), stop_words)
     return documents
+    #returns a dictionary where the key-value pair is the xml doc id and the terms in the document
 def load_documents_jmlm(directory_path, stop_words):
     #save documents in a dictionary
     documents = {}
@@ -80,6 +87,8 @@ def load_documents_jmlm(directory_path, stop_words):
             corpus_length += doc_length
             #print("corpus length", corpus_length)
     return documents, document_lengths, corpus_length
+#returns dictionary where the key is the xml doc id and the value is a list of terms
+#also returns doc length and corpus length
 
 def build_corpus_frequency(documents):
     """
@@ -106,11 +115,15 @@ def calculate_bm25(N, avgdl, documents, queries, df):
                     f = doc.count(word)
                     qf = query.count(word)
                     K = k1 * ((1 - b) + b * dl / avgdl)
-                    idf = math.log((N - n + 0.5) / (n + 0.5), 10)
-                    term_score = idf * ((f * (k1 + 1)) / (f + K)) * ((qf * (k2 + 1)) / (qf + k2))
+                    #print("value for K: ", K)
+                    #idf = math.log((N - n + 0.5) / (n + 0.5), 10)
+                    #term_score = idf * ((f * (k1 + 1)) / (f + K)) * ((qf * (k2 + 1)) / (qf + k2))
+                    term_score = math.log((((2*N)-n+0.5)/(n-0.5)) * (((k1+1)*f)/(K+f)) * ((k2+1)*qf)/(k2+qf))
                     score += term_score
             scores[query_id][doc_id] = score
     return scores
+#returns a dictionary within a dictionary. the outer dictior has the key as the query number, and the vaule is the inner dictionary
+#the inner dictionary has a key of the xml doc ID and the value as the ranking score for that doc
 
 def calculate_jm_scores(queries, documents, corpus_frequency, corpus_length, lambda_param=0.4):
     """
@@ -129,6 +142,8 @@ def calculate_jm_scores(queries, documents, corpus_frequency, corpus_length, lam
                 score += p_td + p_tc
             scores[query_id][doc_id] = score
     return scores
+#returns a dictionary within a dictionary. the outer dictiory has the key as the query number, and the vaule is the inner dictionary
+#the inner dictionary has a key of the xml doc ID and the value as the ranking score for that doc
 
 def save_bm25_scores(scores, output_folder, query_id):
     """
@@ -157,24 +172,29 @@ def save_jmlm_scores(scores, output_folder):
 def main():
     query_file_path = 'C:\\Users\\samin\\Desktop\\IFN647\\Assignment 2\\the50Queries.txt'
     base_data_directory = 'C:\\Users\\samin\\Desktop\\IFN647\\Assignment 2\\Data_Collection-1\\Data_Collection'
-    output_folder = ('RankingOutputs-New')
+    output_folder = ('RankingOutputs-New-2')
     file_path = 'C:\\Users\\samin\\Desktop\\IFN647\\Assignment 2\\common-english-words.txt'
 
     stop_words = load_stop_words(file_path)
     queries = load_queries(query_file_path, stop_words)
+    #print(queries)
 
     for query_id, query_tokens in queries.items():
         data_directory = os.path.join(base_data_directory, f"Data_C{query_id[1:]}")
         documents_bm25 = load_documents_bm25(data_directory, stop_words)
+        #print(documents_bm25)
         N = len(documents_bm25)
         avgdl = sum(len(doc) for doc in documents_bm25.values()) / N
         df = {word: sum(1 for doc in documents_bm25.values() if word in doc) for doc in documents_bm25.values() for word in set(doc)}
         scores_bm25 = calculate_bm25(N, avgdl, documents_bm25, {query_id: query_tokens}, df)
+        #print(scores_bm25)
         save_bm25_scores(scores_bm25, output_folder, query_id)
 
         documents_jmlm, document_lengths, corpus_length = load_documents_jmlm(data_directory, stop_words)
+        #print(documents_jmlm)
         freq = build_corpus_frequency(documents_jmlm)
         scores_jmlm = calculate_jm_scores({query_id: queries[query_id]}, documents_jmlm, freq, corpus_length)
+        #print(scores_jmlm)
         save_jmlm_scores(scores_jmlm, output_folder)
 
 if __name__ == "__main__":
